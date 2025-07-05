@@ -1,0 +1,58 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloud-scheduler-config
+data:
+  # Cloud Scheduler job configuration
+  reminder-job.yaml: |
+    name: "connpass-reminder-job"
+    schedule: "0 */6 * * *"  # Every 6 hours
+    time_zone: "Asia/Tokyo"
+    description: "Connpass event reminder processing job"
+    
+    http_target:
+      uri: "https://asia-northeast1-PROJECT_ID.cloudfunctions.net/connpass-reminder"
+      http_method: "POST"
+      headers:
+        Content-Type: "application/json"
+      body: |
+        {
+          "type": "scheduled",
+          "timestamp": "{{ .ScheduleTime }}"
+        }
+    
+    retry_config:
+      retry_count: 3
+      max_retry_duration: "60s"
+      min_backoff_duration: "5s"
+      max_backoff_duration: "60s"
+      max_doublings: 3
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: connpass-reminder-backup
+spec:
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: reminder-processor
+            image: gcr.io/PROJECT_ID/connpass-reminder:latest
+            env:
+            - name: FUNCTION_TARGET
+              value: "connpass-reminder"
+            - name: GOOGLE_CLOUD_PROJECT
+              value: "PROJECT_ID"
+            command:
+            - "/bin/sh"
+            - "-c"
+            - |
+              curl -X POST \
+                -H "Content-Type: application/json" \
+                -d '{"type": "scheduled", "source": "backup-cron"}' \
+                https://asia-northeast1-PROJECT_ID.cloudfunctions.net/connpass-reminder
+          restartPolicy: OnFailure

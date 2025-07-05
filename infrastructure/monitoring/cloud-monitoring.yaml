@@ -1,0 +1,150 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloud-monitoring-config
+data:
+  alerts.yaml: |
+    # Cloud Monitoring Alert Policies
+    alertPolicies:
+      - displayName: "Connpass Reminder Function Errors"
+        conditions:
+          - displayName: "Function execution errors"
+            conditionThreshold:
+              filter: 'resource.type="cloud_function" resource.labels.function_name="connpass-reminder" severity="ERROR"'
+              comparison: "COMPARISON_GT"
+              thresholdValue: 5
+              duration: "300s"
+              aggregations:
+                - alignmentPeriod: "300s"
+                  perSeriesAligner: "ALIGN_RATE"
+                  crossSeriesReducer: "REDUCE_SUM"
+        notificationChannels:
+          - "${NOTIFICATION_CHANNEL_ID}"
+        alertStrategy:
+          autoClose: "86400s"
+        
+      - displayName: "Connpass Reminder Function Latency"
+        conditions:
+          - displayName: "High function execution time"
+            conditionThreshold:
+              filter: 'resource.type="cloud_function" resource.labels.function_name="connpass-reminder" metric.type="cloudfunctions.googleapis.com/function/execution_time"'
+              comparison: "COMPARISON_GT"
+              thresholdValue: 30000  # 30 seconds
+              duration: "300s"
+              aggregations:
+                - alignmentPeriod: "300s"
+                  perSeriesAligner: "ALIGN_MEAN"
+                  crossSeriesReducer: "REDUCE_MEAN"
+        notificationChannels:
+          - "${NOTIFICATION_CHANNEL_ID}"
+          
+      - displayName: "LINE API Errors"
+        conditions:
+          - displayName: "LINE API error rate"
+            conditionThreshold:
+              filter: 'resource.type="cloud_function" jsonPayload.service="LineService" severity="ERROR"'
+              comparison: "COMPARISON_GT"
+              thresholdValue: 3
+              duration: "300s"
+              aggregations:
+                - alignmentPeriod: "300s"
+                  perSeriesAligner: "ALIGN_RATE"
+                  crossSeriesReducer: "REDUCE_SUM"
+        notificationChannels:
+          - "${NOTIFICATION_CHANNEL_ID}"
+          
+      - displayName: "Connpass API Errors"
+        conditions:
+          - displayName: "Connpass API error rate"
+            conditionThreshold:
+              filter: 'resource.type="cloud_function" jsonPayload.service="ConnpassService" severity="ERROR"'
+              comparison: "COMPARISON_GT"
+              thresholdValue: 3
+              duration: "300s"
+              aggregations:
+                - alignmentPeriod: "300s"
+                  perSeriesAligner: "ALIGN_RATE"
+                  crossSeriesReducer: "REDUCE_SUM"
+        notificationChannels:
+          - "${NOTIFICATION_CHANNEL_ID}"
+
+  dashboards.yaml: |
+    # Cloud Monitoring Dashboard
+    dashboard:
+      displayName: "Connpass LINE Reminder Dashboard"
+      mosaicLayout:
+        tiles:
+          - width: 6
+            height: 4
+            widget:
+              title: "Function Invocations"
+              xyChart:
+                dataSets:
+                  - timeSeriesQuery:
+                      timeSeriesFilter:
+                        filter: 'resource.type="cloud_function" resource.labels.function_name="connpass-reminder"'
+                        aggregation:
+                          alignmentPeriod: "300s"
+                          perSeriesAligner: "ALIGN_RATE"
+                          crossSeriesReducer: "REDUCE_SUM"
+                  plotType: "LINE"
+                  
+          - width: 6
+            height: 4
+            widget:
+              title: "Function Execution Time"
+              xyChart:
+                dataSets:
+                  - timeSeriesQuery:
+                      timeSeriesFilter:
+                        filter: 'resource.type="cloud_function" resource.labels.function_name="connpass-reminder" metric.type="cloudfunctions.googleapis.com/function/execution_time"'
+                        aggregation:
+                          alignmentPeriod: "300s"
+                          perSeriesAligner: "ALIGN_MEAN"
+                          crossSeriesReducer: "REDUCE_MEAN"
+                  plotType: "LINE"
+                  
+          - width: 6
+            height: 4
+            widget:
+              title: "Error Rate"
+              xyChart:
+                dataSets:
+                  - timeSeriesQuery:
+                      timeSeriesFilter:
+                        filter: 'resource.type="cloud_function" resource.labels.function_name="connpass-reminder" severity="ERROR"'
+                        aggregation:
+                          alignmentPeriod: "300s"
+                          perSeriesAligner: "ALIGN_RATE"
+                          crossSeriesReducer: "REDUCE_SUM"
+                  plotType: "LINE"
+                  
+          - width: 6
+            height: 4
+            widget:
+              title: "Notification Success Rate"
+              xyChart:
+                dataSets:
+                  - timeSeriesQuery:
+                      timeSeriesFilter:
+                        filter: 'resource.type="cloud_function" jsonPayload.operation="sendReminder" jsonPayload.status="success"'
+                        aggregation:
+                          alignmentPeriod: "300s"
+                          perSeriesAligner: "ALIGN_RATE"
+                          crossSeriesReducer: "REDUCE_SUM"
+                  plotType: "LINE"
+                  
+          - width: 12
+            height: 4
+            widget:
+              title: "Service Status"
+              scorecard:
+                timeSeriesQuery:
+                  timeSeriesFilter:
+                    filter: 'resource.type="cloud_function" resource.labels.function_name="connpass-reminder"'
+                    aggregation:
+                      alignmentPeriod: "300s"
+                      perSeriesAligner: "ALIGN_MEAN"
+                      crossSeriesReducer: "REDUCE_MEAN"
+                sparkChartView:
+                  sparkChartType: "SPARK_LINE"
