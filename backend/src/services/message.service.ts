@@ -68,11 +68,11 @@ export class MessageService {
             },
             ...(event.description ? [
               {
-                type: 'separator',
+                type: 'separator' as const,
                 margin: 'md',
               },
               {
-                type: 'text',
+                type: 'text' as const,
                 text: this.truncateText(event.description, 100),
                 size: 'sm',
                 color: '#666666',

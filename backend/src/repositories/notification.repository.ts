@@ -172,11 +172,8 @@ export class NotificationRepository {
     pending: number;
   }> {
     try {
-      let query = db.collection(collections.notifications);
-      
-      if (userId) {
-        query = query.where('userId', '==', userId);
-      }
+      const collectionRef = db.collection(collections.notifications);
+      let query = userId ? collectionRef.where('userId', '==', userId) : collectionRef;
       
       const snapshot = await query.get();
       

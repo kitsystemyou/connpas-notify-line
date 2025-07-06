@@ -8,9 +8,13 @@ export class ConnpassService {
 
   async getEvents(params: ConnpassEventParams = {}): Promise<ConnpassEvent[]> {
     try {
-      const queryParams = new URLSearchParams({
-        count: (params.count || 100).toString(),
-        ...params,
+      const queryParams = new URLSearchParams();
+      queryParams.append('count', (params.count || 100).toString());
+      
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && key !== 'count') {
+          queryParams.append(key, value.toString());
+        }
       });
 
       const response = await axios.get<ConnpassApiResponse>(

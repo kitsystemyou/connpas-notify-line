@@ -4,7 +4,7 @@ import { Logger } from '../utils/logger';
 import { SecretManagerService } from './secret-manager.service';
 
 export class LineService {
-  private client: Client;
+  private client!: Client;
   private readonly logger = new Logger('LineService');
   private readonly secretManager = new SecretManagerService();
 

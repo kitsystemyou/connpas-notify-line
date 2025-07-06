@@ -116,7 +116,7 @@ export class ReminderService {
       const notification = await this.notificationRepository.create({
         userId: user.id,
         eventId: event.id,
-        notificationType: reminderType,
+        notificationType: 'reminder',
         sentAt: new Date(),
         status: 'pending',
       });
@@ -138,7 +138,7 @@ export class ReminderService {
         await this.notificationRepository.updateStatus(
           notification.id,
           'failed',
-          error.message
+          (error as Error).message
         );
         
         this.logger.error('Failed to send reminder', {
@@ -312,7 +312,7 @@ export class ReminderService {
     } catch (error) {
       return {
         success: false,
-        error: error.message,
+        error: (error as Error).message,
       };
     }
   }

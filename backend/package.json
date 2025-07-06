@@ -1,19 +1,21 @@
 {
-  "name": "connpass-line-reminder",
+  "name": "connpass-line-reminder-backend",
   "version": "1.0.0",
-  "description": "LINE reminder system for Connpass events",
-  "main": "backend/src/index.js",
+  "description": "Backend for Connpass LINE Reminder",
+  "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "deploy": "npm run build && gcloud functions deploy",
-    "dev": "nodemon --exec ts-node backend/src/index.ts",
-    "test": "jest"
+    "start": "node dist/index.js",
+    "dev": "nodemon --exec ts-node src/index.ts",
+    "dev-local": "nodemon --exec ts-node src/local-server.ts",
+    "test": "jest",
+    "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@google-cloud/firestore": "^7.1.0",
     "@google-cloud/functions-framework": "^3.3.0",
-    "@google-cloud/logging": "^10.5.0",
+    "@google-cloud/firestore": "^7.1.0",
     "@google-cloud/secret-manager": "^5.0.1",
+    "@google-cloud/logging": "^10.5.0",
     "@line/bot-sdk": "^8.0.0",
     "axios": "^1.6.0",
     "express": "^4.18.2",
@@ -21,7 +23,7 @@
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
-    "@types/node": "^20.19.4",
+    "@types/node": "^20.10.0",
     "@typescript-eslint/eslint-plugin": "^6.13.0",
     "@typescript-eslint/parser": "^6.13.0",
     "eslint": "^8.55.0",

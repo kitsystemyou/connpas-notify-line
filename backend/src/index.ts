@@ -1,11 +1,11 @@
-import { functions } from '@google-cloud/functions-framework';
+import { http } from '@google-cloud/functions-framework';
 import { Request, Response } from 'express';
 import { ReminderService } from './services/reminder.service';
 import { Logger } from './utils/logger';
 
 const logger = new Logger('main');
 
-functions.http('connpass-reminder', async (req: Request, res: Response) => {
+http('connpass-reminder', async (req: Request, res: Response) => {
   try {
     logger.info('Function execution started', { method: req.method, path: req.path });
     

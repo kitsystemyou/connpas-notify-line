@@ -12,7 +12,8 @@ export class EventRepository {
         return null;
       }
       
-      return { id: doc.id, ...doc.data() } as ConnpassEvent;
+      const data = doc.data();
+      return { id: parseInt(doc.id), ...data } as ConnpassEvent;
     } catch (error) {
       this.logger.error('Failed to find event by ID', { id, error });
       throw error;

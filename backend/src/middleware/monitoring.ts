@@ -2,13 +2,21 @@ import { Request, Response, NextFunction } from 'express';
 import { Logger } from '../utils/logger';
 import { ErrorHandler } from '../utils/error-handler';
 
+declare global {
+  namespace Express {
+    interface Request {
+      requestId?: string;
+    }
+  }
+}
+
 export class MonitoringMiddleware {
   private logger: Logger;
-  private errorHandler: ErrorHandler;
+  private errorHandlerInstance: ErrorHandler;
 
   constructor() {
     this.logger = new Logger('MonitoringMiddleware');
-    this.errorHandler = new ErrorHandler(this.logger);
+    this.errorHandlerInstance = new ErrorHandler(this.logger);
   }
 
   requestLogger = (req: Request, res: Response, next: NextFunction) => {
@@ -16,7 +24,7 @@ export class MonitoringMiddleware {
     const requestId = this.generateRequestId();
     
     // Add request ID to request object
-    req['requestId'] = requestId;
+    req.requestId = requestId;
 
     this.logger.info('Request started', {
       requestId,
@@ -49,9 +57,9 @@ export class MonitoringMiddleware {
   };
 
   errorHandler = (error: Error, req: Request, res: Response, next: NextFunction) => {
-    const requestId = req['requestId'];
+    const requestId = req.requestId;
     
-    this.errorHandler.handleError(error, {
+    this.errorHandlerInstance.handleError(error, {
       requestId,
       method: req.method,
       url: req.url,
@@ -60,7 +68,7 @@ export class MonitoringMiddleware {
       params: req.params,
     });
 
-    const errorResponse = this.errorHandler.createErrorResponse(error);
+    const errorResponse = this.errorHandlerInstance.createErrorResponse(error);
     res.status(errorResponse.statusCode).json(errorResponse);
   };
 
@@ -75,7 +83,7 @@ export class MonitoringMiddleware {
     };
 
     this.logger.info('Health check requested', {
-      requestId: req['requestId'],
+      requestId: req.requestId,
       healthStatus,
     });
 
@@ -87,14 +95,14 @@ export class MonitoringMiddleware {
       const metrics = await this.collectMetrics();
       
       this.logger.info('Metrics requested', {
-        requestId: req['requestId'],
+        requestId: req.requestId,
         metricsCount: Object.keys(metrics).length,
       });
 
       res.json(metrics);
     } catch (error) {
-      this.errorHandler.handleError(error, {
-        requestId: req['requestId'],
+      this.errorHandlerInstance.handleError(error as Error, {
+        requestId: req.requestId,
         endpoint: 'metrics',
       });
       

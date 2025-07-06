@@ -40,9 +40,9 @@ export class ErrorHandler {
     };
 
     if (error instanceof AppError) {
-      errorInfo['statusCode'] = error.statusCode;
-      errorInfo['isOperational'] = error.isOperational;
-      errorInfo['errorContext'] = error.context;
+      (errorInfo as any).statusCode = error.statusCode;
+      (errorInfo as any).isOperational = error.isOperational;
+      (errorInfo as any).errorContext = error.context;
     }
 
     this.logger.error('Application error occurred', error, errorInfo);
@@ -92,7 +92,7 @@ export class ErrorHandler {
 
     // Add details in development mode
     if (process.env.NODE_ENV === 'development') {
-      response['details'] = {
+      (response as any).details = {
         stack: error.stack,
         name: error.name,
       };
@@ -154,7 +154,7 @@ export const withErrorHandling = async <T>(
   try {
     return await operation();
   } catch (error) {
-    errorHandler.handleError(error, context);
+    errorHandler.handleError(error as Error, context);
     throw error;
   }
 };
@@ -165,18 +165,18 @@ export const createRetryWrapper = (
   logger?: Logger
 ) => {
   return async <T>(operation: () => Promise<T>, context?: string): Promise<T> => {
-    let lastError: Error;
+    let lastError: Error | undefined;
     
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         return await operation();
       } catch (error) {
-        lastError = error;
+        lastError = error as Error;
         
         if (logger) {
           logger.warn(`Retry attempt ${attempt}/${maxRetries} failed`, {
             context,
-            error: error.message,
+            error: (error as Error).message,
             attempt,
           });
         }
@@ -188,6 +188,6 @@ export const createRetryWrapper = (
       }
     }
     
-    throw lastError;
+    throw lastError!;
   };
 };
